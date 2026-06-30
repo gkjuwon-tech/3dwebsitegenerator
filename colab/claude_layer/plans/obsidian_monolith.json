@@ -1,0 +1,115 @@
+{
+  "scene": {
+    "project_id": "obsidian-monolith",
+    "lang": "en-US",
+    "style_keywords": ["cinematic", "volcanic", "moody", "premium", "blue-hour"],
+    "main": {
+      "subject": "a monolithic slab of polished black obsidian with sharp fractured edges and faint internal red glow seams",
+      "material": "stone",
+      "silhouette": "vertical",
+      "scale_meters": 3.5
+    },
+    "background": {
+      "ground": "a small misty volcanic island of black basalt and cracked lava fields",
+      "biome": "volcanic",
+      "extent_meters": 64
+    },
+    "sky": {
+      "description": "blue-hour overcast just after sunset, cool desaturated light, low mist, faint emerging stars",
+      "time_of_day": "dusk",
+      "weather": "hazy",
+      "aurora": false
+    },
+    "interaction": {
+      "mood": "heavy, deliberate reveal — the monolith looms then is circled",
+      "axes": ["scroll", "pointer", "idle"]
+    },
+    "camera": {
+      "direction": "low vertical hero shot that rises and arcs to the left as you scroll"
+    },
+    "constraints": {
+      "runtime": "webgl",
+      "target_engine": "threejs",
+      "max_initial_payload_mb": 20,
+      "max_main_triangles": 80000,
+      "max_background_triangles": 50000,
+      "target_fps_desktop": 60
+    }
+  },
+  "main_image": {
+    "prompt": "a single monolithic slab of polished black obsidian, sharp fractured glassy edges, subtle internal crimson glow along the fracture seams, volcanic glass, standing vertical, dramatic rim light, seamless neutral mid-grey studio background, centered, photorealistic, ultra detailed, octane render",
+    "negative_prompt": "blurry, low quality, watermark, text, people, busy background, multiple objects, extra limbs, cartoon",
+    "control": ["depth"],
+    "seed": 70177,
+    "guidance_scale": 6.5
+  },
+  "background_image": {
+    "prompt": "aerial three-quarter view of a small misty volcanic island, black basalt rock, cracked lava fields with faint glowing orange fissures, dark volcanic sand shoreline, low drifting fog, muted blue-hour light, photorealistic terrain, high detail",
+    "negative_prompt": "blurry, low quality, watermark, text, buildings, people, bright daylight, cartoon",
+    "control": ["depth"],
+    "seed": 31337,
+    "guidance_scale": 6.0
+  },
+  "sky": {
+    "preset": "atmosphere",
+    "timeOfDay": 0.83,
+    "sunDirection": [-0.32, 0.06, -0.94],
+    "zenithColor": [0.02, 0.04, 0.10],
+    "horizonColor": [0.16, 0.16, 0.24],
+    "groundColor": [0.01, 0.012, 0.02],
+    "sunColor": [0.55, 0.34, 0.22],
+    "sunIntensity": 0.6,
+    "sunSize": 0.01,
+    "clouds": { "enabled": true, "coverage": 0.55, "speed": 0.008, "height": 0.45, "color": [0.4, 0.42, 0.5] },
+    "aurora": { "enabled": false, "intensity": 0.0, "color": [0.1, 0.85, 0.55], "speed": 0.03 },
+    "stars": { "enabled": true, "density": 0.35 },
+    "fog": { "density": 0.03, "color": [0.18, 0.2, 0.28] }
+  },
+  "lighting": {
+    "mode": "pbr",
+    "exposure": 1.1,
+    "ambient": { "intensity": 0.28, "env_proxy": "procedural_pmrem", "env_intensity": 0.9 },
+    "lights": [
+      { "type": "directional", "name": "key", "direction": [-0.3, -0.5, -0.8], "intensity": 1.6, "color_kelvin": 9000 },
+      { "type": "directional", "name": "ember-rim", "direction": [0.6, -0.1, 0.7], "intensity": 0.8, "color_kelvin": 3200 },
+      { "type": "point", "name": "fill", "position": [0.0, 3.0, 2.5], "intensity": 0.4, "color_kelvin": 12000 }
+    ],
+    "post_fx": {
+      "tone_mapping": "ACESFilmic",
+      "bloom": 0.12,
+      "bloom_threshold": 0.78,
+      "vignette": 0.32,
+      "chromatic_aberration": 0.002,
+      "grain": 0.05
+    }
+  },
+  "timeline": {
+    "duration_sec": 13,
+    "camera_tracks": [
+      {
+        "id": "monolith_rise",
+        "fov": 34,
+        "times": [0, 3.5, 8, 13],
+        "position": [
+          [0.0, 2.0, 8.0],
+          [0.5, 1.8, 6.5],
+          [1.6, 2.4, 5.5],
+          [2.2, 2.8, 5.0]
+        ],
+        "target": [
+          [0.0, 1.6, 0.0],
+          [0.0, 1.6, 0.0],
+          [0.1, 1.5, 0.0],
+          [0.2, 1.5, 0.1]
+        ],
+        "easing": ["easeInOutSine", "easeOutCubic", "easeInOutCubic"]
+      }
+    ],
+    "interaction_bindings": [
+      { "event": "scroll", "range": [0.0, 0.72], "track_id": "monolith_rise", "mode": "scrub", "target": "camera", "strength": 1 },
+      { "event": "pointer", "track_id": null, "mode": "micro_parallax", "target": "main_model", "strength": 0.1 },
+      { "event": "idle", "track_id": "monolith_rise", "mode": "auto_orbit", "target": "camera", "strength": 1 }
+    ]
+  },
+  "notes": "Blue hour, not night: timeOfDay 0.83 with a cool desaturated palette and a dim warm sun just under the horizon for an ember rim. No aurora (volcanic, not polar); faint stars emerge and clouds sit as low overcast. Heavy mist via high fog density tinted to the cool horizon. Lighting echoes the hour — cool 9000K key agreeing with the sun direction, a 3200K ember rim for the lava glow, a soft cool fill. Restrained bloom and a strong vignette keep it premium and moody. Camera rises from a low vertical framing and arcs left over the scroll to let the 3.5m monolith loom."
+}

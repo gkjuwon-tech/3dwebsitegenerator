@@ -1,14 +1,8 @@
-# deps
-node_modules/
-.pnp.*
-
-# builds
-dist/
-*.tsbuildinfo
-.vite/
-
-# generated / copied at build time
-apps/studio/public/decoders/
+# generated artifacts
+hero_site/
+colab/hero_site/
+_work/
+*.zip
 services/generator/_packages/
 _packages/
 
@@ -19,12 +13,9 @@ __pycache__/
 venv/
 services/generator/.venv/
 services/generator/weights/
-*.glb.cache
 
-# env / secrets
-.env
-.env.*
-!.env.example
+# colab clone artifacts
+3dwebsitegenerator/
 
 # os / editor
 .DS_Store
