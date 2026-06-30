@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hero</title>
+    <style>
+      :root { --ink: #f4f1ea; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: #05060a; color: var(--ink);
+        font-family: ui-sans-serif, system-ui, sans-serif; }
+      #stage { position: fixed; inset: 0; z-index: 0; }
+      #stage canvas { display: block; }
+      .scroll-space { position: relative; z-index: 1; height: 320vh; pointer-events: none; }
+      .cue { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+        font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
+        color: rgba(244,241,234,0.5); z-index: 2; animation: float 2.4s ease-in-out infinite; }
+      .err { position: fixed; left: 24px; bottom: 24px; max-width: 380px; z-index: 3;
+        font-size: 12px; line-height: 1.5; color: #ff9a8b;
+        background: rgba(12,14,20,0.5); border: 1px solid rgba(255,154,139,0.3);
+        border-radius: 10px; padding: 12px 14px; backdrop-filter: blur(10px); }
+      @keyframes float { 50% { transform: translateX(-50%) translateY(-6px); } }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <div class="scroll-space"><div class="cue">scroll ↓</div></div>
+    <script type="module" src="./hero.js"></script>
+  </body>
+</html>
