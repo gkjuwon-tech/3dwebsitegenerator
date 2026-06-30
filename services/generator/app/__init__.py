@@ -1,0 +1,1 @@
+"""Hero Forge generator service."""

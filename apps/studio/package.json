@@ -1,0 +1,23 @@
+{
+  "name": "@hero/studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/copy-decoders.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/copy-decoders.mjs",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@hero/client": "*",
+    "@hero/runtime": "*",
+    "@hero/scene-spec": "*",
+    "@hero/shader-dsl": "*",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}

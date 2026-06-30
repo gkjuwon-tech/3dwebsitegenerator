@@ -1,0 +1,33 @@
+# deps
+node_modules/
+.pnp.*
+
+# builds
+dist/
+*.tsbuildinfo
+.vite/
+
+# generated / copied at build time
+apps/studio/public/decoders/
+services/generator/_packages/
+_packages/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+services/generator/.venv/
+services/generator/weights/
+*.glb.cache
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# os / editor
+.DS_Store
+*.log
+.idea/
+.vscode/

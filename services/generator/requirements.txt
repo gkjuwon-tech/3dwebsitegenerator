@@ -1,0 +1,20 @@
+# ── service core (always needed) ──
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+anthropic>=0.40
+
+# ── generation stack (needed for /generate; GPU strongly recommended) ──
+# Install separately on a GPU host; pinned loosely so CUDA wheels resolve.
+torch>=2.1
+diffusers>=0.30
+transformers>=4.44
+accelerate>=0.33
+safetensors>=0.4
+trimesh>=4.4
+numpy>=1.26
+pillow>=10.3
+rembg>=2.0
+# TripoSR (`tsr`) is installed from the official repo, not PyPI:
+#   pip install git+https://github.com/VAST-AI-Research/TripoSR.git
+# InstantMesh is run via its own clone; see app/i23d.py and the README.
