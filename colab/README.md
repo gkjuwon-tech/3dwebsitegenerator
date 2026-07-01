@@ -1,5 +1,9 @@
 # `colab/` — research notebook + the Claude layer
 
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gkjuwon-tech/3dwebsitegenerator/blob/work/colab/HeroForge_research.ipynb)
+
+**Direct Colab link:** https://colab.research.google.com/github/gkjuwon-tech/3dwebsitegenerator/blob/work/colab/HeroForge_research.ipynb
+
 This folder is the research-phase entry point. It produces a finished website
 hero from a brief by combining **two layers**:
 
@@ -23,9 +27,10 @@ hero from a brief by combining **two layers**:
                           hero_site/  (open anywhere)
 ```
 
-Layer 1 is **Claude's domain** and is baked into this folder — Claude already
-authored a plan, the shader transpiler, and the renderer, so the notebook runs
-with no Anthropic key. Layer 2 is **the open-source models' domain** and lives in
+Layer 1 is **Claude's domain** and is baked into this folder — the Colab
+notebook explicitly selects the baked `soccer_boot_ad` plan, compiles that
+plan's SkySpec into GLSL locally, and runs with no Anthropic key unless you opt
+into live compilation. Layer 2 is **the open-source models' domain** and lives in
 `../services/generator`; the notebook drives it on a GPU.
 
 ## Contents
@@ -41,12 +46,13 @@ with no Anthropic key. Layer 2 is **the open-source models' domain** and lives i
 
 ## Run in Colab
 
-1. Open `HeroForge_research.ipynb` in Colab, set Runtime → **GPU**.
+1. Open the notebook with the [direct Colab link](https://colab.research.google.com/github/gkjuwon-tech/3dwebsitegenerator/blob/work/colab/HeroForge_research.ipynb), then set Runtime → **GPU**.
 2. Run the cells top to bottom. Cell 2 clones the repo; the install cell pulls
    the model stack; layer 1 loads the baked plan; layer 2 generates the GLBs;
    the last cells assemble `hero_site/`, preview it inline, and zip it.
 3. To art-direct a *new* brief live, set `USE_LIVE = True` and provide
-   `ANTHROPIC_API_KEY`.
+   `ANTHROPIC_API_KEY`. Leave `USE_LIVE = False` for the baked no-API Claude
+   layer.
 
 ## Run layer 1 locally (no GPU)
 
@@ -54,7 +60,7 @@ with no Anthropic key. Layer 2 is **the open-source models' domain** and lives i
 pip install pydantic
 PYTHONPATH=colab python -c "
 from claude_layer import load_baked, assemble_site
-plan = load_baked('obsidian_monolith')
+plan = load_baked('soccer_boot_ad')
 assemble_site(plan, 'hero_site',
               main_fail='no GPU here', background_fail='no GPU here')
 print('wrote hero_site/ — open index.html via a static server')

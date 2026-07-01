@@ -1,0 +1,115 @@
+{
+  "scene": {
+    "project_id": "soccer-boot-ad",
+    "lang": "ko-KR",
+    "style_keywords": ["cinematic", "sportswear", "premium", "high-speed", "stadium", "neon"],
+    "main": {
+      "subject": "a single elite soccer boot suspended mid-kick, aerodynamic knit upper, glossy carbon-fiber soleplate, metallic studs, black base with electric lime accents",
+      "material": "mixed",
+      "silhouette": "horizontal",
+      "scale_meters": 0.32
+    },
+    "background": {
+      "ground": "a rain-slick night stadium pitch with short turf, sideline light streaks, boot-shaped splash particles, and blurred grandstand LEDs",
+      "biome": "grassland",
+      "extent_meters": 42
+    },
+    "sky": {
+      "description": "dramatic night match atmosphere under stadium floodlights, low haze, fast clouds, subtle LED glow on the horizon",
+      "time_of_day": "night",
+      "weather": "hazy",
+      "aurora": false
+    },
+    "interaction": {
+      "mood": "explosive product reveal — the boot slices through mist, rotates for detail, then locks into a heroic sale-card pose",
+      "axes": ["scroll", "pointer", "idle"]
+    },
+    "camera": {
+      "direction": "low macro product shot that pushes in, arcs around the toe box, and settles into a premium three-quarter advertising frame"
+    },
+    "constraints": {
+      "runtime": "webgl",
+      "target_engine": "threejs",
+      "max_initial_payload_mb": 20,
+      "max_main_triangles": 80000,
+      "max_background_triangles": 50000,
+      "target_fps_desktop": 60
+    }
+  },
+  "main_image": {
+    "prompt": "single premium soccer boot floating mid air, black engineered knit upper with electric lime speed stripes, glossy carbon fiber soleplate, chrome metallic studs, tiny water droplets, dramatic stadium rim light, seamless neutral dark studio background, centered product advertising render, photorealistic, ultra detailed",
+    "negative_prompt": "blurry, low quality, watermark, text, logo, brand name, feet, legs, person, pair of shoes, multiple shoes, cartoon, deformed studs",
+    "control": ["depth"],
+    "seed": 92024,
+    "guidance_scale": 6.8
+  },
+  "background_image": {
+    "prompt": "night soccer stadium pitch from low advertising angle, wet short green turf, mist and rain spray, bright floodlights, blurred grandstand LED ribbons, dynamic lime and cyan light streaks, premium sports commercial background, photorealistic terrain, high detail",
+    "negative_prompt": "blurry, low quality, watermark, text, players, people, daytime, cartoon, empty white studio, visible logos",
+    "control": ["depth"],
+    "seed": 10411,
+    "guidance_scale": 6.2
+  },
+  "sky": {
+    "preset": "atmosphere",
+    "timeOfDay": 0.96,
+    "sunDirection": [-0.18, 0.18, -0.96],
+    "zenithColor": [0.006, 0.012, 0.035],
+    "horizonColor": [0.02, 0.08, 0.12],
+    "groundColor": [0.005, 0.01, 0.012],
+    "sunColor": [0.72, 0.95, 1.0],
+    "sunIntensity": 1.25,
+    "sunSize": 0.018,
+    "clouds": { "enabled": true, "coverage": 0.38, "speed": 0.018, "height": 0.36, "color": [0.08, 0.16, 0.20] },
+    "aurora": { "enabled": false, "intensity": 0.0, "color": [0.2, 1.0, 0.45], "speed": 0.04 },
+    "stars": { "enabled": true, "density": 0.18 },
+    "fog": { "density": 0.018, "color": [0.03, 0.12, 0.14] }
+  },
+  "lighting": {
+    "mode": "pbr",
+    "exposure": 1.25,
+    "ambient": { "intensity": 0.22, "env_proxy": "procedural_pmrem", "env_intensity": 1.0 },
+    "lights": [
+      { "type": "directional", "name": "stadium-key", "direction": [-0.25, -0.85, -0.45], "intensity": 2.4, "color_kelvin": 6500 },
+      { "type": "directional", "name": "lime-speed-rim", "direction": [0.7, -0.2, 0.55], "intensity": 1.15, "color_kelvin": 5200 },
+      { "type": "point", "name": "toe-highlight", "position": [-0.9, 1.0, 1.2], "intensity": 0.65, "color_kelvin": 9000 }
+    ],
+    "post_fx": {
+      "tone_mapping": "ACESFilmic",
+      "bloom": 0.18,
+      "bloom_threshold": 0.68,
+      "vignette": 0.24,
+      "chromatic_aberration": 0.0015,
+      "grain": 0.035
+    }
+  },
+  "timeline": {
+    "duration_sec": 11,
+    "camera_tracks": [
+      {
+        "id": "boot_speed_reveal",
+        "fov": 32,
+        "times": [0, 2.8, 6.5, 11],
+        "position": [
+          [0.0, 0.42, 2.4],
+          [-0.35, 0.34, 1.65],
+          [0.65, 0.48, 1.45],
+          [0.85, 0.55, 1.75]
+        ],
+        "target": [
+          [0.0, 0.22, 0.0],
+          [0.05, 0.18, 0.0],
+          [0.02, 0.20, 0.0],
+          [0.0, 0.20, 0.02]
+        ],
+        "easing": ["easeOutExpo", "easeInOutCubic", "easeInOutSine"]
+      }
+    ],
+    "interaction_bindings": [
+      { "event": "scroll", "range": [0.0, 0.76], "track_id": "boot_speed_reveal", "mode": "scrub", "target": "camera", "strength": 1 },
+      { "event": "pointer", "track_id": null, "mode": "micro_parallax", "target": "main_model", "strength": 0.06 },
+      { "event": "idle", "track_id": "boot_speed_reveal", "mode": "auto_orbit", "target": "camera", "strength": 0.6 }
+    ]
+  },
+  "notes": "Soccer boot advertising plan: a night-stadium product reveal with cyan-lime highlights, wet turf reflections, and restrained premium bloom. The baked SkySpec replaces the previous volcanic blue-hour mood with a floodlit hazy match atmosphere, so the Colab assembler will compile fresh GLSL from this plan when it builds hero_site. Camera values are macro-scaled for a 32cm boot and keep the object framed for desktop and mobile. Prompts avoid logos and people so the generated asset remains a clean commercial product hero."
+}
