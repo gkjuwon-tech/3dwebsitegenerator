@@ -67,8 +67,11 @@ def reconstruct_preview(image, out_dir: str, *, resolution: int = 256) -> MeshRe
 
     model = _load_triposr()
     proc = _preprocess(image)
+    # TSR has no `.device` attribute — pass the device string explicitly, the way
+    # TripoSR's own run.py does.
+    device = settings.device if torch.cuda.is_available() else "cpu"
     with torch.no_grad():
-        scene_codes = model([proc], device=model.device)
+        scene_codes = model([proc], device=device)
         meshes = model.extract_mesh(scene_codes, has_vertex_color=True, resolution=resolution)
     mesh = meshes[0]
     os.makedirs(out_dir, exist_ok=True)
