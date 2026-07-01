@@ -231,8 +231,19 @@ function placeModel(name, obj, timeline, opts = {}) {
   const box = new THREE.Box3().setFromObject(obj);
   const anchor = timeline.camera_tracks[0]?.target?.[0] ?? [0, 0.9, 0];
   if (name === 'main') {
+    // A single-image reconstruction (TripoSR) arrives in an arbitrary pose. When
+    // the plan declares a VERTICAL silhouette but the mesh's longest axis is
+    // horizontal, it's lying down — stand it up so its longest axis points +Y,
+    // otherwise scaling by height blows a lying-down hero up to a huge slab.
+    if (opts.silhouette === 'vertical') {
+      const s0 = box.getSize(new THREE.Vector3());
+      const longest = s0.x >= s0.y && s0.x >= s0.z ? 'x' : (s0.z >= s0.y && s0.z >= s0.x ? 'z' : 'y');
+      if (longest === 'x') obj.rotateZ(-Math.PI / 2);
+      else if (longest === 'z') obj.rotateX(Math.PI / 2);
+      obj.updateMatrixWorld(true);
+    }
     // TripoSR meshes are unit-normalized → scale to the intended real height
-    const size = box.getSize(new THREE.Vector3());
+    const size = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
     obj.scale.setScalar((opts.scaleMeters ?? 3.5) / Math.max(size.y, 1e-3));
     let b2 = new THREE.Box3().setFromObject(obj);
     const c2 = b2.getCenter(new THREE.Vector3());
@@ -318,6 +329,7 @@ async function main() {
   // terrain first so the hero can be seated onto its actual surface
   const slots = [['background_model', 'background'], ['main_model', 'main']];
   const scaleMeters = pkg.scene?.main_scale_meters ?? 3.5;
+  const silhouette = pkg.scene?.main_silhouette;
   let ground = null;
   for (const [key, name] of slots) {
     const slot = pkg.assets[key];
@@ -325,7 +337,7 @@ async function main() {
     try {
       const gltf = await loader.loadAsync('./' + slot.url);
       gltf.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-      placeModel(name, gltf.scene, pkg.timeline, { ground, scaleMeters });
+      placeModel(name, gltf.scene, pkg.timeline, { ground, scaleMeters, silhouette });
       if (name === 'background') ground = gltf.scene;
       else if (name === 'main') {
         const b = new THREE.Box3().setFromObject(gltf.scene);

@@ -74,6 +74,7 @@ def assemble_site(
         "assets": {"main_model": main_slot, "background_model": bg_slot},
         "scene": {
             "main_scale_meters": plan["scene"]["main"]["scale_meters"],
+            "main_silhouette": plan["scene"]["main"]["silhouette"],
             "background_extent_meters": plan["scene"]["background"]["extent_meters"],
         },
         "sky": {
