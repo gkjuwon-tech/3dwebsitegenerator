@@ -280,7 +280,11 @@ async function main() {
 
   const resize = () => {
     ({ w, h } = size());
-    renderer.setSize(w, h, false);
+    // updateStyle must stay on: with setPixelRatio > 1 the drawing buffer is
+    // larger than the viewport, and skipping the CSS style update leaves the
+    // canvas sized to the buffer (e.g. 2x on HiDPI/mobile), so only the top-left
+    // fraction shows and the rest is clipped off-screen.
+    renderer.setSize(w, h);
     camera.aspect = w / h; camera.updateProjectionMatrix();
     post.composer.setSize(w, h); post.bloom.setSize(w, h);
     post.grade.uniforms.uResolution.value.set(w, h);
