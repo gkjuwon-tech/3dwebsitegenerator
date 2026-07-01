@@ -45,7 +45,10 @@ def list_baked() -> list[str]:
     return sorted(f[:-5] for f in os.listdir(_PLANS) if f.endswith(".json"))
 
 
-def load_baked(name: str = "obsidian_monolith") -> Dict[str, Any]:
+DEFAULT_BAKED_PLAN = os.environ.get("HERO_BAKED_PLAN", "soccer_boot_ad")
+
+
+def load_baked(name: str = DEFAULT_BAKED_PLAN) -> Dict[str, Any]:
     path = os.path.join(_PLANS, name + ".json")
     with open(path) as f:
         plan = json.load(f)
