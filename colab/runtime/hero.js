@@ -149,7 +149,7 @@ class CameraRig {
     this.pe = { x: 0, y: 0 };
     this.focus = null; this._camDir = new THREE.Vector3();
   }
-  setFocus(center, radius) { this.focus = { center: center.clone(), radius }; }
+  setFocus(center, halfW, halfH) { this.focus = { center: center.clone(), halfW, halfH }; }
   evaluate(u) {
     const tr = this.track, n = tr.times.length;
     if (n === 1) { this.p.fromArray(tr.position[0]); this.t.fromArray(tr.target[0]); return; }
@@ -196,7 +196,12 @@ class CameraRig {
       lookAt = this.focus.center;
       const vFov = THREE.MathUtils.degToRad(this.camera.fov);
       const hFov = 2 * Math.atan(Math.tan(vFov / 2) * this.camera.aspect);
-      const need = (this.focus.radius * 1.3) / Math.sin(Math.min(vFov, hFov) / 2);
+      // fit the hero's box: HEIGHT to the vertical FOV, WIDTH to the horizontal
+      // FOV. Using a bounding *sphere* over-estimates the width of a tall/leaning
+      // hero and dollies the camera absurdly far back on narrow (mobile) screens.
+      const needH = this.focus.halfH / Math.tan(vFov / 2);
+      const needW = this.focus.halfW / Math.tan(hFov / 2);
+      const need = Math.max(needH, needW) * 1.25;
       const dir = this._camDir.copy(this.p).sub(lookAt);
       const dist = dir.length() || 1;
       if (dist < need) this.p.copy(lookAt).add(dir.multiplyScalar(need / dist));
@@ -308,8 +313,9 @@ async function main() {
       placeModel(name, gltf.scene, pkg.timeline, { ground, scaleMeters });
       if (name === 'background') ground = gltf.scene;
       else if (name === 'main') {
-        const sph = new THREE.Box3().setFromObject(gltf.scene).getBoundingSphere(new THREE.Sphere());
-        rig.setFocus(sph.center, sph.radius);
+        const b = new THREE.Box3().setFromObject(gltf.scene);
+        const sz = b.getSize(new THREE.Vector3());
+        rig.setFocus(b.getCenter(new THREE.Vector3()), Math.max(sz.x, sz.z) / 2, sz.y / 2);
       }
       scene.add(gltf.scene);
     } catch (e) { console.warn(`slot ${name} failed:`, e); }
