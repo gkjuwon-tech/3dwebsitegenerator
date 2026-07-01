@@ -182,17 +182,18 @@ class CameraRig {
       this.p.addScaledVector(this.right, this.pe.x * pb.strength);
       this.p.addScaledVector(this.up, this.pe.y * pb.strength);
     }
+    // portrait/mobile fit: on narrow screens both pull the camera back AND widen
+    // the FOV so the framing authored for desktop isn't cropped
+    const DESIGN = 16 / 9;
+    let fov = this.track.fov;
+    if (this.camera.aspect < DESIGN) {
+      const fit = DESIGN / this.camera.aspect;
+      this.p.sub(this.t).multiplyScalar(Math.min(fit, 2.6)).add(this.t);
+      fov = Math.min(this.track.fov * Math.min(fit, 1.6), 78);
+    }
     this.camera.position.copy(this.p); this.camera.lookAt(this.t);
-    if (this.track.fov) {
-      // aspect-fit: on portrait/narrow screens widen the vertical FOV so the
-      // horizontal framing authored for desktop isn't cropped on mobile
-      const DESIGN = 16 / 9;
-      let fov = this.track.fov;
-      if (this.camera.aspect < DESIGN) {
-        const hf = 2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(this.track.fov) / 2) * DESIGN);
-        fov = Math.min(THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hf / 2) / this.camera.aspect)), 82);
-      }
-      if (Math.abs(this.camera.fov - fov) > 0.01) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
+    if (this.track.fov && Math.abs(this.camera.fov - fov) > 0.01) {
+      this.camera.fov = fov; this.camera.updateProjectionMatrix();
     }
   }
 }
