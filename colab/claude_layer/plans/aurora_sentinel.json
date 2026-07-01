@@ -1,0 +1,115 @@
+{
+  "scene": {
+    "project_id": "aurora-sentinel",
+    "lang": "en-US",
+    "style_keywords": ["cinematic", "arctic", "aurora", "premium", "nocturne"],
+    "main": {
+      "subject": "a tall faceted spire of translucent glacial ice with sharp fractured facets and a soft internal cyan glow",
+      "material": "glass",
+      "silhouette": "vertical",
+      "scale_meters": 3.6
+    },
+    "background": {
+      "ground": "a windswept polar snowfield of wind-carved drifts and pale blue ice shelves fading into low ground fog",
+      "biome": "arctic",
+      "extent_meters": 56
+    },
+    "sky": {
+      "description": "deep polar night, a vivid green aurora ribboning overhead, a dense field of cold stars, faint moonlight low on the horizon",
+      "time_of_day": "night",
+      "weather": "clear",
+      "aurora": true
+    },
+    "interaction": {
+      "mood": "still, reverent nocturne — the spire is discovered, then slowly circled under the lights",
+      "axes": ["scroll", "pointer", "idle"]
+    },
+    "camera": {
+      "direction": "low vertical hero shot that rises and arcs gently to the right as you scroll, keeping the spire against the aurora"
+    },
+    "constraints": {
+      "runtime": "webgl",
+      "target_engine": "threejs",
+      "max_initial_payload_mb": 20,
+      "max_main_triangles": 80000,
+      "max_background_triangles": 50000,
+      "target_fps_desktop": 60
+    }
+  },
+  "main_image": {
+    "prompt": "a single tall faceted spire of translucent glacial ice, sharp fractured crystalline facets, soft internal cyan glow, standing vertical, cold rim light, seamless neutral mid-grey studio background, centered, photorealistic, ultra detailed, subsurface scattering, octane render",
+    "negative_prompt": "blurry, low quality, watermark, text, people, busy background, multiple objects, warm light, daylight, cartoon",
+    "control": ["depth"],
+    "seed": 44012,
+    "guidance_scale": 6.5
+  },
+  "background_image": {
+    "prompt": "aerial three-quarter view of a windswept polar snowfield, wind-carved snow drifts, pale blue ice shelves, low drifting ground fog, deep night under faint aurora light, photorealistic arctic terrain, high detail",
+    "negative_prompt": "blurry, low quality, watermark, text, buildings, people, trees, bright daylight, warm sunlight, cartoon",
+    "control": ["depth"],
+    "seed": 90233,
+    "guidance_scale": 6.0
+  },
+  "sky": {
+    "preset": "atmosphere",
+    "timeOfDay": 0.97,
+    "sunDirection": [-0.25, -0.05, -0.97],
+    "zenithColor": [0.004, 0.010, 0.028],
+    "horizonColor": [0.03, 0.07, 0.12],
+    "groundColor": [0.004, 0.008, 0.012],
+    "sunColor": [0.45, 0.55, 0.75],
+    "sunIntensity": 0.35,
+    "sunSize": 0.008,
+    "clouds": { "enabled": true, "coverage": 0.22, "speed": 0.01, "height": 0.4, "color": [0.06, 0.12, 0.18] },
+    "aurora": { "enabled": true, "intensity": 1.1, "color": [0.15, 0.9, 0.55], "speed": 0.04 },
+    "stars": { "enabled": true, "density": 0.5 },
+    "fog": { "density": 0.035, "color": [0.03, 0.08, 0.12] }
+  },
+  "lighting": {
+    "mode": "pbr",
+    "exposure": 1.0,
+    "ambient": { "intensity": 0.2, "env_proxy": "procedural_pmrem", "env_intensity": 0.7 },
+    "lights": [
+      { "type": "directional", "name": "moon-key", "direction": [-0.35, -0.6, -0.7], "intensity": 1.25, "color_kelvin": 11000 },
+      { "type": "directional", "name": "aurora-rim", "direction": [0.5, -0.2, 0.75], "intensity": 0.55, "color_kelvin": 8000 },
+      { "type": "point", "name": "ice-fill", "position": [0.0, 2.6, 2.2], "intensity": 0.3, "color_kelvin": 9500 }
+    ],
+    "post_fx": {
+      "tone_mapping": "ACESFilmic",
+      "bloom": 0.14,
+      "bloom_threshold": 0.76,
+      "vignette": 0.34,
+      "chromatic_aberration": 0.0018,
+      "grain": 0.05
+    }
+  },
+  "timeline": {
+    "duration_sec": 12,
+    "camera_tracks": [
+      {
+        "id": "sentinel_rise",
+        "fov": 34,
+        "times": [0, 3.5, 8, 12],
+        "position": [
+          [0.0, 1.8, 7.5],
+          [-0.4, 1.7, 6.2],
+          [-1.4, 2.2, 5.4],
+          [-2.0, 2.6, 5.0]
+        ],
+        "target": [
+          [0.0, 1.6, 0.0],
+          [0.0, 1.6, 0.0],
+          [-0.1, 1.5, 0.0],
+          [-0.15, 1.5, 0.1]
+        ],
+        "easing": ["easeInOutSine", "easeOutCubic", "easeInOutCubic"]
+      }
+    ],
+    "interaction_bindings": [
+      { "event": "scroll", "range": [0.0, 0.72], "track_id": "sentinel_rise", "mode": "scrub", "target": "camera", "strength": 1 },
+      { "event": "pointer", "track_id": null, "mode": "micro_parallax", "target": "main_model", "strength": 0.09 },
+      { "event": "idle", "track_id": "sentinel_rise", "mode": "auto_orbit", "target": "camera", "strength": 1 }
+    ]
+  },
+  "notes": "Deep polar night, not blue hour: timeOfDay 0.97 with a near-black zenith and a cold blue-green palette. The lesson from the soccer scene — a night sky lit by a daytime-strength key reads as two mismatched worlds — is applied here: the ground is lit ONLY by dim, cold sources that agree with the sky, so terrain and hero sit in one nocturne. A soft 11000K moon key at 1.25, a low 8000K aurora rim to echo the overhead ribbon, and a gentle cool fill; exposure held at 1.0 and bloom restrained (0.14 @ 0.76) so nothing blows out. Aurora is the hero of the sky (intensity 1.1, green) with a dense star field (0.5) rendered as fine points. A vertical 3.6m ice spire stands cleanly on the snow; the camera rises from a low hero framing and arcs right over the scroll to sweep the spire across the aurora."
+}

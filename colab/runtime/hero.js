@@ -219,29 +219,40 @@ function makeLoader() {
   loader.setDRACOLoader(draco);
   return loader;
 }
+// raycast straight down onto a placed object at world (x, z); returns the top
+// surface height, or null if the ray misses.
+function surfaceHeightAt(obj, x, z) {
+  obj.updateMatrixWorld(true);
+  const ray = new THREE.Raycaster(new THREE.Vector3(x, 1e4, z), new THREE.Vector3(0, -1, 0));
+  const hit = ray.intersectObject(obj, true)[0];
+  return hit ? hit.point.y : null;
+}
 function placeModel(name, obj, timeline, opts = {}) {
   const box = new THREE.Box3().setFromObject(obj);
+  const anchor = timeline.camera_tracks[0]?.target?.[0] ?? [0, 0.9, 0];
   if (name === 'main') {
     // TripoSR meshes are unit-normalized → scale to the intended real height
     const size = box.getSize(new THREE.Vector3());
     obj.scale.setScalar((opts.scaleMeters ?? 3.5) / Math.max(size.y, 1e-3));
     let b2 = new THREE.Box3().setFromObject(obj);
     const c2 = b2.getCenter(new THREE.Vector3());
-    const target = timeline.camera_tracks[0]?.target[0] ?? [0, 0.9, 0];
-    obj.position.x += target[0] - c2.x;
-    obj.position.z += target[2] - c2.z;
-    // seat the base on the ACTUAL terrain surface (raycast down) + embed, so the
-    // hero reads as part of the ground instead of resting on the y=0 plane
-    let surfaceY = 0;
-    if (opts.ground) {
-      const ray = new THREE.Raycaster(new THREE.Vector3(target[0], 200, target[2]), new THREE.Vector3(0, -1, 0));
-      const hit = ray.intersectObject(opts.ground, true)[0];
-      if (hit) surfaceY = hit.point.y;
-    }
+    obj.position.x += anchor[0] - c2.x;
+    obj.position.z += anchor[2] - c2.z;
+    // seat the base on the ACTUAL terrain surface (raycast down), embedding a
+    // hair of the hero's OWN height. A fixed metric depth (e.g. 0.3 m) tuned for
+    // a tall statue swallows a small prop like a boot whole, so scale it.
+    const surfaceY = (opts.ground && surfaceHeightAt(opts.ground, anchor[0], anchor[2])) || 0;
     b2 = new THREE.Box3().setFromObject(obj);
-    obj.position.y += surfaceY - b2.min.y - 0.3;
+    const heroH = b2.getSize(new THREE.Vector3()).y;
+    obj.position.y += surfaceY - b2.min.y - heroH * 0.03;
   } else {
-    obj.position.y += -box.max.y * 0.02;
+    // Ground the terrain: drop it so its surface directly under the hero anchor
+    // sits at y=0. Heightfield terrains can peak several meters up at the origin;
+    // seating the hero on that raw peak lifts it far above where the authored
+    // camera track frames the scene, leaving the hero floating with the ground
+    // sloped out of view.
+    const surfaceY = surfaceHeightAt(obj, anchor[0], anchor[2]);
+    obj.position.y -= surfaceY != null ? surfaceY : box.max.y;
   }
 }
 
