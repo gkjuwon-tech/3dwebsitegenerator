@@ -1,0 +1,276 @@
+{
+  "scene": {
+    "project_id": "dune-oracle",
+    "lang": "en-US",
+    "style_keywords": [
+      "cinematic",
+      "desert",
+      "dawn",
+      "premium",
+      "warm",
+      "monumental"
+    ],
+    "main": {
+      "subject": "a tall weathered sandstone obelisk carved with eroded ancient glyphs, sun-bleached and wind-scoured",
+      "material": "stone",
+      "silhouette": "vertical",
+      "scale_meters": 4.2
+    },
+    "background": {
+      "ground": "rolling windswept desert dunes with rippled sand and long soft shadows",
+      "biome": "desert",
+      "extent_meters": 62
+    },
+    "sky": {
+      "description": "clear desert dawn, a low warm sun just breaking the horizon, pale gold to soft blue gradient, faint drifting dust haze",
+      "time_of_day": "dawn",
+      "weather": "clear",
+      "aurora": false
+    },
+    "interaction": {
+      "mood": "slow reverent sunrise reveal \u2014 the obelisk emerges from the haze as the camera rises",
+      "axes": [
+        "scroll",
+        "pointer",
+        "idle"
+      ]
+    },
+    "camera": {
+      "direction": "low vertical hero shot that rises and arcs gently to the left as you scroll, keeping the obelisk against the dawn sun"
+    },
+    "constraints": {
+      "runtime": "webgl",
+      "target_engine": "threejs",
+      "max_initial_payload_mb": 20,
+      "max_main_triangles": 80000,
+      "max_background_triangles": 50000,
+      "target_fps_desktop": 60
+    }
+  },
+  "main_image": {
+    "prompt": "a single tall weathered sandstone obelisk carved with eroded ancient glyphs, sun-bleached stone, wind-scoured surface, standing vertical, warm low-angle dawn rim light, seamless neutral mid-grey studio background, centered, photorealistic, ultra detailed, octane render",
+    "negative_prompt": "blurry, low quality, watermark, text, people, busy background, multiple objects, snow, ice, night, cartoon",
+    "control": [
+      "depth"
+    ],
+    "seed": 51877,
+    "guidance_scale": 6.5
+  },
+  "background_image": {
+    "prompt": "aerial three-quarter view of rolling desert dunes at dawn, rippled wind-carved sand, long soft shadows, warm gold light, faint dust haze on the horizon, photorealistic arid terrain, high detail",
+    "negative_prompt": "blurry, low quality, watermark, text, buildings, people, vegetation, water, snow, night, cartoon",
+    "control": [
+      "depth"
+    ],
+    "seed": 20461,
+    "guidance_scale": 6.0
+  },
+  "sky": {
+    "preset": "atmosphere",
+    "timeOfDay": 0.24,
+    "sunDirection": [
+      0.42,
+      0.08,
+      -0.9
+    ],
+    "zenithColor": [
+      0.08,
+      0.14,
+      0.26
+    ],
+    "horizonColor": [
+      0.55,
+      0.36,
+      0.22
+    ],
+    "groundColor": [
+      0.14,
+      0.1,
+      0.07
+    ],
+    "sunColor": [
+      1.0,
+      0.74,
+      0.46
+    ],
+    "sunIntensity": 0.9,
+    "sunSize": 0.02,
+    "clouds": {
+      "enabled": true,
+      "coverage": 0.3,
+      "speed": 0.01,
+      "height": 0.42,
+      "color": [
+        0.9,
+        0.72,
+        0.6
+      ]
+    },
+    "aurora": {
+      "enabled": false,
+      "intensity": 0.0,
+      "color": [
+        0.1,
+        0.85,
+        0.55
+      ],
+      "speed": 0.03
+    },
+    "stars": {
+      "enabled": false,
+      "density": 0.0
+    },
+    "fog": {
+      "density": 0.006,
+      "color": [
+        0.42,
+        0.3,
+        0.22
+      ]
+    }
+  },
+  "lighting": {
+    "mode": "pbr",
+    "exposure": 0.98,
+    "ambient": {
+      "intensity": 0.26,
+      "env_proxy": "procedural_pmrem",
+      "env_intensity": 0.85
+    },
+    "lights": [
+      {
+        "type": "directional",
+        "name": "dawn-key",
+        "direction": [
+          -0.42,
+          -0.22,
+          0.88
+        ],
+        "intensity": 1.7,
+        "color_kelvin": 3600
+      },
+      {
+        "type": "directional",
+        "name": "sky-fill",
+        "direction": [
+          0.3,
+          -0.7,
+          0.2
+        ],
+        "intensity": 0.5,
+        "color_kelvin": 9000
+      },
+      {
+        "type": "point",
+        "name": "warm-bounce",
+        "position": [
+          1.2,
+          0.8,
+          2.0
+        ],
+        "intensity": 0.3,
+        "color_kelvin": 2800
+      }
+    ],
+    "post_fx": {
+      "tone_mapping": "ACESFilmic",
+      "bloom": 0.13,
+      "bloom_threshold": 0.8,
+      "vignette": 0.28,
+      "chromatic_aberration": 0.0016,
+      "grain": 0.045
+    }
+  },
+  "timeline": {
+    "duration_sec": 12,
+    "camera_tracks": [
+      {
+        "id": "obelisk_dawn",
+        "fov": 34,
+        "times": [
+          0,
+          3.5,
+          8,
+          12
+        ],
+        "position": [
+          [
+            0.0,
+            1.6,
+            8.0
+          ],
+          [
+            0.5,
+            1.7,
+            6.6
+          ],
+          [
+            1.5,
+            2.3,
+            5.6
+          ],
+          [
+            2.1,
+            2.7,
+            5.1
+          ]
+        ],
+        "target": [
+          [
+            0.0,
+            1.7,
+            0.0
+          ],
+          [
+            0.0,
+            1.7,
+            0.0
+          ],
+          [
+            0.1,
+            1.7,
+            0.0
+          ],
+          [
+            0.15,
+            1.7,
+            0.1
+          ]
+        ],
+        "easing": [
+          "easeInOutSine",
+          "easeOutCubic",
+          "easeInOutCubic"
+        ]
+      }
+    ],
+    "interaction_bindings": [
+      {
+        "event": "scroll",
+        "range": [
+          0.0,
+          0.72
+        ],
+        "track_id": "obelisk_dawn",
+        "mode": "scrub",
+        "target": "camera",
+        "strength": 1
+      },
+      {
+        "event": "pointer",
+        "track_id": null,
+        "mode": "micro_parallax",
+        "target": "main_model",
+        "strength": 0.09
+      },
+      {
+        "event": "idle",
+        "track_id": "obelisk_dawn",
+        "mode": "auto_orbit",
+        "target": "camera",
+        "strength": 1
+      }
+    ]
+  },
+  "notes": "Warm desert dawn \u2014 the tonal opposite of the Aurora Sentinel nocturne, and a check that the pipeline handles a bright scene without blowing out. timeOfDay 0.24 with a warm gold horizon fading to soft blue zenith; a low 3600K dawn key agrees with the sun just over the horizon, a cool 9000K sky fill balances the shadows, and a soft 2800K bounce warms the base. Exposure held at 0.98 and bloom restrained (0.13 @ 0.80, and the runtime's bloom gain was cut so bright skies no longer wash out) so the bright sand and sun stay premium. No stars or aurora at dawn; light dust haze via warm-tinted fog and thin clouds. A vertical 4.2 m sandstone obelisk stands on the dunes (the runtime stands vertical-silhouette heroes upright); the camera rises from a low hero framing and arcs left to sweep the obelisk across the rising sun."
+}

@@ -125,7 +125,11 @@ const GradeShader = {
 function buildPost(renderer, scene, camera, lighting, w, h) {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), lighting.post_fx.bloom * 4.0, 0.6, lighting.post_fx.bloom_threshold);
+  // The plan authors bloom as a restrained value (~0.12–0.18); ×4 turned that
+  // into a strong bloom that smeared bright skies (dawn/desert) into a white
+  // wash while barely showing on dark scenes. ×1.8 keeps a premium glow without
+  // blowing out the bright end.
+  const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), lighting.post_fx.bloom * 1.8, 0.6, lighting.post_fx.bloom_threshold);
   composer.addPass(bloom);
   const grade = new ShaderPass(GradeShader);
   grade.uniforms.uVignette.value = lighting.post_fx.vignette;
