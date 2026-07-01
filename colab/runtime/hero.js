@@ -125,7 +125,11 @@ const GradeShader = {
 function buildPost(renderer, scene, camera, lighting, w, h) {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), lighting.post_fx.bloom * 4.0, 0.6, lighting.post_fx.bloom_threshold);
+  // The plan authors bloom as a restrained value (~0.12–0.18); ×4 turned that
+  // into a strong bloom that smeared bright skies (dawn/desert) into a white
+  // wash while barely showing on dark scenes. ×1.8 keeps a premium glow without
+  // blowing out the bright end.
+  const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), lighting.post_fx.bloom * 1.8, 0.6, lighting.post_fx.bloom_threshold);
   composer.addPass(bloom);
   const grade = new ShaderPass(GradeShader);
   grade.uniforms.uVignette.value = lighting.post_fx.vignette;
@@ -219,29 +223,51 @@ function makeLoader() {
   loader.setDRACOLoader(draco);
   return loader;
 }
+// raycast straight down onto a placed object at world (x, z); returns the top
+// surface height, or null if the ray misses.
+function surfaceHeightAt(obj, x, z) {
+  obj.updateMatrixWorld(true);
+  const ray = new THREE.Raycaster(new THREE.Vector3(x, 1e4, z), new THREE.Vector3(0, -1, 0));
+  const hit = ray.intersectObject(obj, true)[0];
+  return hit ? hit.point.y : null;
+}
 function placeModel(name, obj, timeline, opts = {}) {
   const box = new THREE.Box3().setFromObject(obj);
+  const anchor = timeline.camera_tracks[0]?.target?.[0] ?? [0, 0.9, 0];
   if (name === 'main') {
+    // A single-image reconstruction (TripoSR) arrives in an arbitrary pose. When
+    // the plan declares a VERTICAL silhouette but the mesh's longest axis is
+    // horizontal, it's lying down — stand it up so its longest axis points +Y,
+    // otherwise scaling by height blows a lying-down hero up to a huge slab.
+    if (opts.silhouette === 'vertical') {
+      const s0 = box.getSize(new THREE.Vector3());
+      const longest = s0.x >= s0.y && s0.x >= s0.z ? 'x' : (s0.z >= s0.y && s0.z >= s0.x ? 'z' : 'y');
+      if (longest === 'x') obj.rotateZ(-Math.PI / 2);
+      else if (longest === 'z') obj.rotateX(Math.PI / 2);
+      obj.updateMatrixWorld(true);
+    }
     // TripoSR meshes are unit-normalized → scale to the intended real height
-    const size = box.getSize(new THREE.Vector3());
+    const size = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
     obj.scale.setScalar((opts.scaleMeters ?? 3.5) / Math.max(size.y, 1e-3));
     let b2 = new THREE.Box3().setFromObject(obj);
     const c2 = b2.getCenter(new THREE.Vector3());
-    const target = timeline.camera_tracks[0]?.target[0] ?? [0, 0.9, 0];
-    obj.position.x += target[0] - c2.x;
-    obj.position.z += target[2] - c2.z;
-    // seat the base on the ACTUAL terrain surface (raycast down) + embed, so the
-    // hero reads as part of the ground instead of resting on the y=0 plane
-    let surfaceY = 0;
-    if (opts.ground) {
-      const ray = new THREE.Raycaster(new THREE.Vector3(target[0], 200, target[2]), new THREE.Vector3(0, -1, 0));
-      const hit = ray.intersectObject(opts.ground, true)[0];
-      if (hit) surfaceY = hit.point.y;
-    }
+    obj.position.x += anchor[0] - c2.x;
+    obj.position.z += anchor[2] - c2.z;
+    // seat the base on the ACTUAL terrain surface (raycast down), embedding a
+    // hair of the hero's OWN height. A fixed metric depth (e.g. 0.3 m) tuned for
+    // a tall statue swallows a small prop like a boot whole, so scale it.
+    const surfaceY = (opts.ground && surfaceHeightAt(opts.ground, anchor[0], anchor[2])) || 0;
     b2 = new THREE.Box3().setFromObject(obj);
-    obj.position.y += surfaceY - b2.min.y - 0.3;
+    const heroH = b2.getSize(new THREE.Vector3()).y;
+    obj.position.y += surfaceY - b2.min.y - heroH * 0.03;
   } else {
-    obj.position.y += -box.max.y * 0.02;
+    // Ground the terrain: drop it so its surface directly under the hero anchor
+    // sits at y=0. Heightfield terrains can peak several meters up at the origin;
+    // seating the hero on that raw peak lifts it far above where the authored
+    // camera track frames the scene, leaving the hero floating with the ground
+    // sloped out of view.
+    const surfaceY = surfaceHeightAt(obj, anchor[0], anchor[2]);
+    obj.position.y -= surfaceY != null ? surfaceY : box.max.y;
   }
 }
 
@@ -280,7 +306,11 @@ async function main() {
 
   const resize = () => {
     ({ w, h } = size());
-    renderer.setSize(w, h, false);
+    // updateStyle must stay on: with setPixelRatio > 1 the drawing buffer is
+    // larger than the viewport, and skipping the CSS style update leaves the
+    // canvas sized to the buffer (e.g. 2x on HiDPI/mobile), so only the top-left
+    // fraction shows and the rest is clipped off-screen.
+    renderer.setSize(w, h);
     camera.aspect = w / h; camera.updateProjectionMatrix();
     post.composer.setSize(w, h); post.bloom.setSize(w, h);
     post.grade.uniforms.uResolution.value.set(w, h);
@@ -303,6 +333,7 @@ async function main() {
   // terrain first so the hero can be seated onto its actual surface
   const slots = [['background_model', 'background'], ['main_model', 'main']];
   const scaleMeters = pkg.scene?.main_scale_meters ?? 3.5;
+  const silhouette = pkg.scene?.main_silhouette;
   let ground = null;
   for (const [key, name] of slots) {
     const slot = pkg.assets[key];
@@ -310,7 +341,7 @@ async function main() {
     try {
       const gltf = await loader.loadAsync('./' + slot.url);
       gltf.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-      placeModel(name, gltf.scene, pkg.timeline, { ground, scaleMeters });
+      placeModel(name, gltf.scene, pkg.timeline, { ground, scaleMeters, silhouette });
       if (name === 'background') ground = gltf.scene;
       else if (name === 'main') {
         const b = new THREE.Box3().setFromObject(gltf.scene);

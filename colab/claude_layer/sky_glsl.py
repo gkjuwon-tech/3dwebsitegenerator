@@ -74,9 +74,17 @@ vec3 aurora(vec3 dir){
 STARS_GLSL = """
 vec3 starField(vec3 dir){
   if(dir.y<0.0) return vec3(0.0);
-  vec3 cell=floor(dir*(180.0+uStarDensity*220.0));
+  // Quantise the view direction into cells, but light only a small round POINT
+  // inside each chosen cell — lighting the whole cell (step on the cell hash)
+  // paints blocky squares across the sky instead of stars.
+  vec3 p=dir*(180.0+uStarDensity*220.0);
+  vec3 cell=floor(p);
+  vec3 f=fract(p)-0.5;
   float rnd=hash31(cell);
-  float star=step(1.0-uStarDensity*0.02,rnd);
+  float present=step(1.0-uStarDensity*0.02,rnd);
+  vec3 jitter=vec3(hash31(cell+11.5),hash31(cell+23.7),hash31(cell+37.1))-0.5;
+  float d=length(f-jitter*0.7);
+  float star=present*pow(smoothstep(0.5,0.0,d),5.0);
   float tw=0.6+0.4*sin(uTime*3.0+rnd*100.0);
   return vec3(star*tw*smoothstep(0.0,0.4,dir.y));
 }
