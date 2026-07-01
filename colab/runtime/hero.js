@@ -183,8 +183,16 @@ class CameraRig {
       this.p.addScaledVector(this.up, this.pe.y * pb.strength);
     }
     this.camera.position.copy(this.p); this.camera.lookAt(this.t);
-    if (this.track.fov && Math.abs(this.camera.fov - this.track.fov) > 0.01) {
-      this.camera.fov = this.track.fov; this.camera.updateProjectionMatrix();
+    if (this.track.fov) {
+      // aspect-fit: on portrait/narrow screens widen the vertical FOV so the
+      // horizontal framing authored for desktop isn't cropped on mobile
+      const DESIGN = 16 / 9;
+      let fov = this.track.fov;
+      if (this.camera.aspect < DESIGN) {
+        const hf = 2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(this.track.fov) / 2) * DESIGN);
+        fov = Math.min(THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hf / 2) / this.camera.aspect)), 82);
+      }
+      if (Math.abs(this.camera.fov - fov) > 0.01) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
     }
   }
 }
@@ -197,14 +205,27 @@ function makeLoader() {
   loader.setDRACOLoader(draco);
   return loader;
 }
-function placeModel(name, obj, timeline) {
+function placeModel(name, obj, timeline, opts = {}) {
   const box = new THREE.Box3().setFromObject(obj);
-  const center = box.getCenter(new THREE.Vector3());
   if (name === 'main') {
+    // TripoSR meshes are unit-normalized → scale to the intended real height
+    const size = box.getSize(new THREE.Vector3());
+    obj.scale.setScalar((opts.scaleMeters ?? 3.5) / Math.max(size.y, 1e-3));
+    let b2 = new THREE.Box3().setFromObject(obj);
+    const c2 = b2.getCenter(new THREE.Vector3());
     const target = timeline.camera_tracks[0]?.target[0] ?? [0, 0.9, 0];
-    obj.position.x += target[0] - center.x;
-    obj.position.z += target[2] - center.z;
-    obj.position.y += -box.min.y;
+    obj.position.x += target[0] - c2.x;
+    obj.position.z += target[2] - c2.z;
+    // seat the base on the ACTUAL terrain surface (raycast down) + embed, so the
+    // hero reads as part of the ground instead of resting on the y=0 plane
+    let surfaceY = 0;
+    if (opts.ground) {
+      const ray = new THREE.Raycaster(new THREE.Vector3(target[0], 200, target[2]), new THREE.Vector3(0, -1, 0));
+      const hit = ray.intersectObject(opts.ground, true)[0];
+      if (hit) surfaceY = hit.point.y;
+    }
+    b2 = new THREE.Box3().setFromObject(obj);
+    obj.position.y += surfaceY - b2.min.y - 0.3;
   } else {
     obj.position.y += -box.max.y * 0.02;
   }
@@ -265,14 +286,18 @@ async function main() {
 
   // load generated GLBs (honest: skip pending/failed)
   const loader = makeLoader();
-  const slots = [['main_model', 'main'], ['background_model', 'background']];
+  // terrain first so the hero can be seated onto its actual surface
+  const slots = [['background_model', 'background'], ['main_model', 'main']];
+  const scaleMeters = pkg.scene?.main_scale_meters ?? 3.5;
+  let ground = null;
   for (const [key, name] of slots) {
     const slot = pkg.assets[key];
     if (slot?.kind !== 'glb') continue;
     try {
       const gltf = await loader.loadAsync('./' + slot.url);
       gltf.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-      placeModel(name, gltf.scene, pkg.timeline);
+      placeModel(name, gltf.scene, pkg.timeline, { ground, scaleMeters });
+      if (name === 'background') ground = gltf.scene;
       scene.add(gltf.scene);
     } catch (e) { console.warn(`slot ${name} failed:`, e); }
   }
