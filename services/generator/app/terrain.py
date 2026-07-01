@@ -47,7 +47,8 @@ def build_terrain(concept_image, spec: BackgroundSpec, out_dir: str, *, grid: in
 
     depth = _depth_pipe()(concept_image)["depth"]
     depth = np.asarray(depth.resize((grid, grid))).astype(np.float32)
-    depth = (depth - depth.min()) / (depth.ptp() + 1e-6)
+    # np.ptp(x), not x.ptp() — the ndarray method was removed in NumPy 2.0
+    depth = (depth - depth.min()) / (np.ptp(depth) + 1e-6)
 
     extent = float(spec.extent_meters)
     relief = extent * 0.08  # vertical relief proportional to extent, kept gentle
@@ -61,16 +62,16 @@ def build_terrain(concept_image, spec: BackgroundSpec, out_dir: str, *, grid: in
     gy *= np.clip(1.2 - rad, 0.0, 1.0)
 
     verts = np.stack([gx, gy, gz], axis=-1).reshape(-1, 3)
-    faces = []
-    for j in range(grid - 1):
-        for i in range(grid - 1):
-            a = j * grid + i
-            b = a + 1
-            c = a + grid
-            d = c + 1
-            faces.append([a, c, b])
-            faces.append([b, c, d])
-    faces = np.asarray(faces)
+    # two triangles per grid cell, built vectorized (a Python double loop over a
+    # 192x192 grid is the terrain bottleneck)
+    idx = np.arange(grid * grid).reshape(grid, grid)
+    a = idx[:-1, :-1].ravel()
+    b = idx[:-1, 1:].ravel()
+    c = idx[1:, :-1].ravel()
+    d = idx[1:, 1:].ravel()
+    faces = np.empty((a.size * 2, 3), dtype=np.int64)
+    faces[0::2] = np.stack([a, c, b], axis=1)
+    faces[1::2] = np.stack([b, c, d], axis=1)
 
     color_src = np.asarray(Image.fromarray(np.asarray(concept_image)).resize((grid, grid)))
     if color_src.ndim == 2:
@@ -79,10 +80,13 @@ def build_terrain(concept_image, spec: BackgroundSpec, out_dir: str, *, grid: in
 
     mesh = trimesh.Trimesh(vertices=verts, faces=faces, vertex_colors=colors, process=True)
     if len(mesh.faces) > max_triangles:
-        try:
-            mesh = mesh.simplify_quadric_decimation(max_triangles)
+        try:  # trimesh ≥4 expects face_count=; older took a positional int
+            mesh = mesh.simplify_quadric_decimation(face_count=max_triangles)
         except Exception:
-            pass  # decimation is best-effort; bake.py compresses regardless
+            try:
+                mesh = mesh.simplify_quadric_decimation(max_triangles)
+            except Exception:
+                pass  # decimation is best-effort; bake.py compresses regardless
 
     os.makedirs(out_dir, exist_ok=True)
     glb = os.path.join(out_dir, "background.glb")
