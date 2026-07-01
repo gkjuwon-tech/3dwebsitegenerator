@@ -72,6 +72,10 @@ def assemble_site(
     package = {
         "project_id": plan["scene"]["project_id"],
         "assets": {"main_model": main_slot, "background_model": bg_slot},
+        "scene": {
+            "main_scale_meters": plan["scene"]["main"]["scale_meters"],
+            "background_extent_meters": plan["scene"]["background"]["extent_meters"],
+        },
         "sky": {
             "frag": "sky.frag",
             "vert": "sky.vert",
