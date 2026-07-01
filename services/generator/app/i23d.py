@@ -54,6 +54,10 @@ def _load_triposr():
     )
     model.renderer.set_chunk_size(8192)
     model.to(settings.device if torch.cuda.is_available() else "cpu")
+    # The checkpoint mixes an fp16 backbone with fp32 heads; left as-is the DINO
+    # tokenizer emits half activations into fp32 layers → "Input type (c10::Half)
+    # and bias type (float) should be the same". Unify everything to fp32.
+    model.float()
     return model
 
 
