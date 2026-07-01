@@ -147,7 +147,9 @@ class CameraRig {
     this.p = new THREE.Vector3(); this.t = new THREE.Vector3(); this.tmp = new THREE.Vector3();
     this.right = new THREE.Vector3(); this.up = new THREE.Vector3(0, 1, 0); this.fwd = new THREE.Vector3();
     this.pe = { x: 0, y: 0 };
+    this.focus = null; this._camDir = new THREE.Vector3();
   }
+  setFocus(center, radius) { this.focus = { center: center.clone(), radius }; }
   evaluate(u) {
     const tr = this.track, n = tr.times.length;
     if (n === 1) { this.p.fromArray(tr.position[0]); this.t.fromArray(tr.target[0]); return; }
@@ -182,19 +184,25 @@ class CameraRig {
       this.p.addScaledVector(this.right, this.pe.x * pb.strength);
       this.p.addScaledVector(this.up, this.pe.y * pb.strength);
     }
-    // portrait/mobile fit: on narrow screens both pull the camera back AND widen
-    // the FOV so the framing authored for desktop isn't cropped
-    const DESIGN = 16 / 9;
-    let fov = this.track.fov;
-    if (this.camera.aspect < DESIGN) {
-      const fit = DESIGN / this.camera.aspect;
-      this.p.sub(this.t).multiplyScalar(Math.min(fit, 2.6)).add(this.t);
-      fov = Math.min(this.track.fov * Math.min(fit, 1.6), 78);
+    // Frame the hero so it ALWAYS fits, on any aspect: look at its bounding
+    // sphere and, if the authored camera is too close for this viewport, dolly
+    // back until the sphere fits the tighter of the vertical/horizontal FOV.
+    // This is what keeps mobile portrait from cropping — no magic constants.
+    let lookAt = this.t;
+    if (this.track.fov && Math.abs(this.camera.fov - this.track.fov) > 0.01) {
+      this.camera.fov = this.track.fov; this.camera.updateProjectionMatrix();
     }
-    this.camera.position.copy(this.p); this.camera.lookAt(this.t);
-    if (this.track.fov && Math.abs(this.camera.fov - fov) > 0.01) {
-      this.camera.fov = fov; this.camera.updateProjectionMatrix();
+    if (this.focus) {
+      lookAt = this.focus.center;
+      const vFov = THREE.MathUtils.degToRad(this.camera.fov);
+      const hFov = 2 * Math.atan(Math.tan(vFov / 2) * this.camera.aspect);
+      const need = (this.focus.radius * 1.3) / Math.sin(Math.min(vFov, hFov) / 2);
+      const dir = this._camDir.copy(this.p).sub(lookAt);
+      const dist = dir.length() || 1;
+      if (dist < need) this.p.copy(lookAt).add(dir.multiplyScalar(need / dist));
     }
+    this.camera.position.copy(this.p);
+    this.camera.lookAt(lookAt);
   }
 }
 
@@ -299,6 +307,10 @@ async function main() {
       gltf.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
       placeModel(name, gltf.scene, pkg.timeline, { ground, scaleMeters });
       if (name === 'background') ground = gltf.scene;
+      else if (name === 'main') {
+        const sph = new THREE.Box3().setFromObject(gltf.scene).getBoundingSphere(new THREE.Sphere());
+        rig.setFocus(sph.center, sph.radius);
+      }
       scene.add(gltf.scene);
     } catch (e) { console.warn(`slot ${name} failed:`, e); }
   }
